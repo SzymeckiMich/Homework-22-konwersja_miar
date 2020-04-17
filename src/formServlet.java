@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Locale;
 
 @WebServlet("/calculate")
 public class formServlet extends HttpServlet {
@@ -18,9 +19,10 @@ public class formServlet extends HttpServlet {
     String milligramsOnString;
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html");
+//        response.setLocale(Locale.ITALIAN);
 
         metersOnString = request.getParameter("meters");
         centimetersOnString = request.getParameter("centimeters");
@@ -31,68 +33,71 @@ public class formServlet extends HttpServlet {
         milligramsOnString = request.getParameter("milligrams");
 
 
-//        try {
-//            double meters = Double.parseDouble(metersOnString);
-//            double centimeters = Double.parseDouble(centimetersOnString);
-//            double millimeters = Double.parseDouble(milligramsOnString);
-//
-//            double kilograms = Double.parseDouble(kilogramsOnString);
-//            double grams = Double.parseDouble(gramsOnString);
-//            double milligrams = Double.parseDouble(milligramsOnString);
-//        }
-//        catch (NumberFormatException ex){
-//            System.err.println("Wprowadzone dane nie były liczbami");
-//        }
-
-
-        if (howMuchUserHasEnteredValuesInMetric() == 0) {
-            // Napisz nie mam nic do wyświetlenia
-
-        } else if (howMuchUserHasEnteredValuesInMetric() == 1) {
-            MetricValuesCalculator calculator = new MetricValuesCalculator();
-            if (metersOnString != null) {
-                try {
-                    double valueToCalculate = Double.parseDouble(usedValuesToString());
-                } catch (NumberFormatException ex) {
-                    System.err.println("Niewłasściwy format danych");
-                }
-            }
+        if (howMuchUserHasEnteredValuesInMetric() == 0) response.getWriter().println("Brak wartości do wyświetlenia");
+        else if (howMuchUserHasEnteredValuesInMetric() == 1) {
+            MetricValuesCalculator.CalculatedMetricValues trueValues = valueOnStringToCalculatedMetricObject();
+            response.getWriter().println("<h1>Wartości metryczne</h1>");
+            response.getWriter().println(String.format("<p>Metry: %.3f</p> <p>Centymetry: %.3f</p> <p>Milimetry: %.3f</p>",
+                    trueValues.getMetersValue(), trueValues.getCentimetersValue(),
+                    trueValues.getMillimetersValue()));
+        } else {
+            response.getWriter().println("<h2>Wpisz tylko jedną wartość</h2>");
         }
 
+
+        if (howMuchUserHasEnteredValuesInWeight() == 0) response.getWriter().println("Brak wartości do wyświetlenia");
+        else if (howMuchUserHasEnteredValuesInWeight() == 1) {
+            WeightValuesCalculator.CalculatedWeightValues trueValues = valueOnStringToCalculateWeightObject();
+            response.getWriter().println("<h1>Wartości długości</h1>");
+            response.getWriter().println(String.format("<p>Kilogramy: %.3f</p> <p>Gramy: %.3f</p> <p>Miligramy: %.3f</p> ",
+                    trueValues.getKilogramsValue(), trueValues.getGramsValue(), trueValues.getMilligramsValue()));
+        } else {
+            response.getWriter().println("<h2>Wpisz tylko jedną wartość</h2>");
+        }
     }
 
 
     private int howMuchUserHasEnteredValuesInMetric() {
         int counter = 0;
-        if (metersOnString != null) counter++;
-        if (centimetersOnString != null) counter++;
-        if (millimetersOnString != null) counter++;
+        if (!metersOnString.equals("")) counter++;
+        if (!centimetersOnString.equals("")) counter++;
+        if (!millimetersOnString.equals("")) counter++;
         return counter;
     }
 
     private int howMuchUserHasEnteredValuesInWeight() {
         int counter = 0;
-        if (kilogramsOnString != null) counter++;
-        if (gramsOnString != null) counter++;
-        if (milligramsOnString != null) counter++;
+        if (!kilogramsOnString.equals("")) counter++;
+        if (!gramsOnString.equals("")) counter++;
+        if (!milligramsOnString.equals("")) counter++;
         return counter;
     }
 
-    private String usedValuesToString() {
-        if (metersOnString != null) return metersOnString;
-        if (centimetersOnString != null) return centimetersOnString;
-        return millimetersOnString;
-    }
-
-    private MetricValuesCalculator.CalculatedMetricValues calculateValues(double value){
+    private MetricValuesCalculator.CalculatedMetricValues valueOnStringToCalculatedMetricObject() {
         MetricValuesCalculator calculator = new MetricValuesCalculator();
-        if (metersOnString != null) return calculator.fromMeters(value);
-        if (centimetersOnString != null) return calculator.fromCentimeters(value);
-        return calculator.fromMillimeters(value);
+        if (!metersOnString.equals("")) return calculator.fromMeters(tryToConvertStringToDouble(metersOnString));
+        if (!centimetersOnString.equals(""))
+            return calculator.fromCentimeters(tryToConvertStringToDouble(centimetersOnString));
+        return calculator.fromMillimeters(tryToConvertStringToDouble(millimetersOnString));
     }
 
-    // napisać metodę która sprawdza który to element jest wykorzystywany, wysłya go do nowej metody która robi try catch
-    // tamta metoda zwraca double, String -> try -> double -> wysyła go do przeliczeń -> zwraca obliczony obiekt
+    private WeightValuesCalculator.CalculatedWeightValues valueOnStringToCalculateWeightObject() {
+        WeightValuesCalculator calculator = new WeightValuesCalculator();
+        if (!kilogramsOnString.equals(""))
+            return calculator.fromKilograms(tryToConvertStringToDouble(kilogramsOnString));
+        if (!gramsOnString.equals("")) return calculator.fromGrams(tryToConvertStringToDouble(gramsOnString));
+        return calculator.fromMilligrams(tryToConvertStringToDouble(milligramsOnString));
+    }
 
-
+    private double tryToConvertStringToDouble(String value) {
+        double valueOnDouble = 0;
+        try {
+            valueOnDouble = Double.parseDouble(value);
+            return valueOnDouble;
+        } catch (NumberFormatException ex) {
+            System.err.println("Nieprawidłowy format danych");
+        }
+        return valueOnDouble;
+    }
 }
+
