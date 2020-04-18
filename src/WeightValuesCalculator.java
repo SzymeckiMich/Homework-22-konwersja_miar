@@ -22,16 +22,10 @@ public class WeightValuesCalculator {
             this.milligramsValue = milligrams;
         }
 
-        public double getKilogramsValue() {
-            return kilogramsValue;
-        }
+        public double getKilogramsValue() { return kilogramsValue; }
 
-        public double getGramsValue() {
-            return gramsValue;
-        }
+        public double getGramsValue() { return gramsValue; }
 
-        public double getMilligramsValue() {
-            return milligramsValue;
-        }
+        public double getMilligramsValue() { return milligramsValue; }
     }
 }
